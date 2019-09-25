@@ -1,5 +1,5 @@
-import * as styleExports from "@microsoft/fast-components-styles-msft";
 import { memoize, noop } from "lodash-es";
+import * as styleExports from "@microsoft/fast-components-styles-msft";
 const style = document.createElement("style");
 style.innerHTML = "body { font-size: 20px; font-family: monospace; }";
 
@@ -51,15 +51,31 @@ const recipeNames = [
     "neutralLayerL3",
     "neutralLayerL4"
 ];
-const designSystem = styleExports.DesignSystemDefaults;
-const designSystems = designSystem.neutralPalette.map(color =>
-    Object.assign({}, designSystem, { backgroundColor: color })
-);
+const DesignSystemDefaults = styleExports.DesignSystemDefaults;
+const layers = [
+    "neutralLayerFloating",
+    "neutralLayerCard",
+    "neutralLayerCardContainer",
+    "neutralLayerL1",
+    "neutralLayerL2",
+    "neutralLayerL3",
+    "neutralLayerL4"
+];
 
-const itterations = 20;
+const darkModeDesignSystem = Object.assign({}, DesignSystemDefaults, { backgroundColor: "#000000" });
+const lightModeDesignSystem = DesignSystemDefaults;
+
+const darkModeDesignSystems = layers.map(name => Object.assign({}, DesignSystemDefaults, { backgroundColor: styleExports[name](darkModeDesignSystem) }));
+const lightModeDesignSystems = layers.map(name => Object.assign({}, DesignSystemDefaults, { backgroundColor: styleExports[name](lightModeDesignSystem) }));
+
+const designSystems = lightModeDesignSystems.concat(darkModeDesignSystems);
+
+const itterations = 1;
 let results = [];
 const scaleFactor = 1000000000000000000;
+let totalDuration = 0;
 recipeNames.forEach(name => (results[name] = []));
+
 
 for (var i = 0; i < itterations; i++) {
     recipeNames.forEach(recipeName => {
@@ -72,7 +88,7 @@ for (var i = 0; i < itterations; i++) {
 
             const measure = performance.getEntriesByType("measure");
             const duration = measure[0].duration;
-
+            totalDuration += duration;
             results[recipeName].push(duration * scaleFactor);
 
             performance.clearMarks();
@@ -88,26 +104,32 @@ recipeNames.forEach(recipeName => {
     const average = timings.reduce((accum, value) => accum + value) / timings.length
     const longest = sorted[0];
 
-    sortedSet.push({recipeName, longest: longest / scaleFactor, average: average / scaleFactor});
+    sortedSet.push({recipeName, longest: (longest / scaleFactor).toFixed(3), average: (average / scaleFactor).toFixed(2)});
 });
 
-console.log(sortedSet)
 sortedSet.sort((a, b) => {
     return b.longest - a.longest;
 });
 
 const el = document.createElement("table");
-const header = document.createElement("tr");
+const caption  = document.createElement("caption");
+caption.innerHTML = `Total execution time: ${totalDuration}`;
+el.appendChild(caption);
+
+const header = document.createElement("thead");
+const headerRow = document.createElement("tr");
+header.appendChild(headerRow);
 const nameHeading = document.createElement("th");
+
 nameHeading.innerHTML = "Recipe name";
 const meanHeading = document.createElement("th");
 meanHeading.innerHTML = "Average duration";
 const longestHeading = document.createElement("th");
 longestHeading.innerHTML = "Longest duration";
 
-header.appendChild(nameHeading);
-header.appendChild(longestHeading);
-header.appendChild(meanHeading);
+headerRow.appendChild(nameHeading);
+headerRow.appendChild(longestHeading);
+headerRow.appendChild(meanHeading);
 
 el.appendChild(header);
 
