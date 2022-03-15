@@ -16,7 +16,7 @@
     "@microsoft/fast-components-styles-msft": "^4.22.0",
     "babel-loader": "^8.0.6",
     "html-webpack-plugin": "^3.2.0",
-    "lodash-es": "^4.17.15",
+    "lodash-es": "^4.17.21",
     "serve": "^11.1.0",
     "webpack": "^4.40.2",
     "webpack-cli": "^3.3.9",
